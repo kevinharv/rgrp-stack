@@ -27,17 +27,25 @@ type DatabaseConfig struct {
 
 
 
-func GetConfiguration() Configuration {
-	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	})
-	logger := slog.New(handler)
-	logger.Info("Reading configuration from environment")
-
+func GetConfiguration(logger *slog.Logger) Configuration {
 	config := Configuration{}
 
 	getTLSConfig(&config, logger)
 	getDBConfig(&config, logger)
+	
+	serverPort, portConfigured := os.LookupEnv("ServerPort")
+	if !portConfigured {
+		logger.Warn("Server port not configured - defaulting to 8443")
+		serverPort = "8443"
+	}
+
+	port, err := strconv.ParseInt(serverPort, 10, 32)
+	if err != nil {
+		logger.Error("Invalid server port - defaulting to 8443")
+		port = 8443
+	}
+
+	config.ServerPort = int(port)
 
 	return config
 }

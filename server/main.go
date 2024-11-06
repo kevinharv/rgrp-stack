@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -37,22 +38,31 @@ func main() {
 		}
 	}
 
-	// Get configuration from environment
-	// Setup TLS if enabled
-	// Connect to Postgres DB
-	// Connect to Redis
+	var db *sql.DB
+	var dbConnectionAttempts = 0
 
-	// TODO - populate Redis cache
+	for {
+		db, err := utils.CreateConnection(&config, logger)
 
-	// Setup routes
+		if err == nil {
+			break
+		}
 
-	// Start server
+		logger.Error("Could not connect to database - retrying")
+		time.Sleep(1 * time.Second)
 
-	// Listen for stop signals - close gracefully
-	// Flush Redis to Postgres (if needed)
-	// Close Redis connection
-	// Close Postgres connection
-	// Shutdown HTTP server
+		dbConnectionAttempts++
+		if (dbConnectionAttempts > 5) {
+			logger.Error("Could not connect to database - exiting")
+			os.Exit(1)
+		}
+	}
+
+	db.Ping()
+
+
+	// To-Do - connect to Redis
+
 
 	mux := http.NewServeMux()
 
@@ -67,6 +77,11 @@ func main() {
 	// Create channel and handle OS signals
 	exitChannel := make(chan os.Signal, 1)
 	signal.Notify(exitChannel, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	
+	
+	// TODO - populate Redis cache
+
 
 
 	// Run HTTP server in Goroutine
@@ -88,6 +103,9 @@ func main() {
 	// Create context and give 5 seconds to timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer func() {
+		// To-Do - flush Redis to Postgres (if needed)
+		// To-Do - close Redis connection
+		// To-Do - close Postgres connection
 		cancel()
 	}()
 

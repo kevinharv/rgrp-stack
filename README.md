@@ -4,10 +4,9 @@
 
 ## Architecture
 
-### Vue.js
-- Vue 3 - composition API
-- (Potentially) Pinia for state management
-- Vuetify or shadcn/ui component libraries
+### React.js
+- React 18
+- Potentially some component library (shadcn/ui?)
 
 ### Go
 - net/http webserver
